@@ -1,0 +1,50 @@
+@startuml
+skinparam handwritten true
+title Diagrama de Classes - Padrão Observer
+
+interface Assunto {
+    + registrarObservador(o: Observador)
+    + removerObservador(o: Observador)
+    + notificarObservadores()
+}
+
+interface Observador {
+    + atualizar(temperatura: float)
+}
+
+class EstacaoMeteorologica {
+    - observadores: List<Observador>
+    - temperatura: float
+    + registrarObservador(o: Observador)
+    + removerObservador(o: Observador)
+    + notificarObservadores()
+    + setTemperatura(novaTemperatura: float)
+}
+
+class DisplayCondicoesAtuais {
+    - temperatura: float
+    - estacaoMeteorologica: Assunto
+    + atualizar(temperatura: float)
+    + exibir()
+}
+
+class DisplayEstatisticas {
+    - temperatura: float
+    - estacaoMeteorologica: Assunto
+    + atualizar(temperatura: float)
+    + exibir()
+}
+
+' Relações de Realização (implementa)
+EstacaoMeteorologica .up.|> Assunto
+DisplayCondicoesAtuais .up.|> Observador
+DisplayEstatisticas .up.|> Observador
+
+' Relação de Agregação (tem uma lista de)
+EstacaoMeteorologica "1" o-- "0..*" Observador : possui
+
+' Relações de Associação (conhece/usa)
+DisplayCondicoesAtuais ..> Assunto : conhece
+DisplayEstatisticas ..> Assunto : conhece
+
+@enduml
