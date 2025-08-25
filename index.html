@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula Interativa: Padrão Observer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: A single-page application with a fixed sidebar for navigation and a main content area. This structure allows students to move freely between concepts, code, and an interactive simulation, providing a non-linear, exploratory learning experience. The core is the interactive simulation, which visually demonstrates the cause-and-effect of the Observer pattern, making the abstract concept tangible. This is more engaging and effective for learning than static slides. -->
+    <!-- Visualization & Content Choices: 
+        - Introduction/Concept/Advantages: Presented as clear, concise text blocks. Goal: Inform. Method: Styled HTML.
+        - UML Diagram: Recreated using structured HTML and Tailwind CSS instead of an image. Goal: Organize. Method: HTML/CSS. Justification: Ensures visual consistency and responsiveness.
+        - Java Code: Displayed in a tabbed interface. Goal: Organize. Method: HTML/JS. Justification: Prevents overwhelming students with a long scroll of code and allows easy comparison between files.
+        - Interactive Simulation: A visual dashboard with controls (slider, buttons) and displays. Goal: Demonstrate Change & Relationships. Method: HTML/CSS/JS. Justification: This is the most critical part, turning the passive act of reading code into an active learning experience where students can directly manipulate the 'Subject' and see the 'Observers' react in real-time.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Warm Neutral */
+            color: #4B4B4B;
+        }
+        .active-nav {
+            background-color: #FBEBD7; /* Subtle Accent */
+            color: #D97706; /* Stronger Accent */
+            font-weight: 600;
+        }
+        .code-block {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 0.875rem;
+        }
+        .tab-active {
+            border-bottom: 2px solid #D97706;
+            color: #D97706;
+            font-weight: 600;
+        }
+        .sim-display {
+            transition: all 0.3s ease-in-out;
+        }
+        .sim-display.disconnected {
+            background-color: #E5E7EB;
+            opacity: 0.6;
+            border-color: #9CA3AF;
+        }
+        .sim-display.disconnected .temp-value {
+            color: #6B7280;
+        }
+        .highlight-update {
+            animation: flash 1s ease-out;
+        }
+        @keyframes flash {
+            0% { background-color: #FBEBD7; }
+            100% { background-color: #FFFFFF; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-white border-b md:border-r border-stone-200 flex-shrink-0">
+            <div class="p-6">
+                <h1 class="text-xl font-bold text-amber-700">Padrão Observer</h1>
+                <p class="text-sm text-stone-500 mt-1">Aula Interativa</p>
+            </div>
+            <nav id="navigation" class="flex flex-row md:flex-col p-3 md:p-4 space-x-2 md:space-x-0 md:space-y-2 overflow-x-auto">
+                <a href="#introducao" class="nav-link px-4 py-2 text-sm rounded-lg text-stone-700 hover:bg-stone-100 whitespace-nowrap">Introdução</a>
+                <a href="#conceito" class="nav-link px-4 py-2 text-sm rounded-lg text-stone-700 hover:bg-stone-100 whitespace-nowrap">Conceito</a>
+                <a href="#diagrama" class="nav-link px-4 py-2 text-sm rounded-lg text-stone-700 hover:bg-stone-100 whitespace-nowrap">Diagrama UML</a>
+                <a href="#codigo" class="nav-link px-4 py-2 text-sm rounded-lg text-stone-700 hover:bg-stone-100 whitespace-nowrap">Código-Fonte</a>
+                <a href="#simulacao" class="nav-link px-4 py-2 text-sm rounded-lg text-stone-700 hover:bg-stone-100 whitespace-nowrap">Simulação</a>
+                <a href="#vantagens" class="nav-link px-4 py-2 text-sm rounded-lg text-stone-700 hover:bg-stone-100 whitespace-nowrap">Vantagens</a>
+                <a href="#conclusao" class="nav-link px-4 py-2 text-sm rounded-lg text-stone-700 hover:bg-stone-100 whitespace-nowrap">Conclusão</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 md:p-10">
+            
+            <div id="content-container">
+                <!-- Introduction Section -->
+                <section id="introducao" class="content-section space-y-4">
+                    <h2 class="text-3xl font-bold text-stone-800">Padrão Observer: Mantendo Todos Informados!</h2>
+                    <p class="text-lg text-stone-600">Esta é uma exploração interativa do padrão de projeto Observer. O objetivo é entender como criar sistemas onde uma mudança em um objeto notifica automaticamente todos os outros objetos interessados, de forma desacoplada e flexível.</p>
+                    <div class="p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+                        <p class="text-stone-700">Pense em um sistema de notícias: quando um furo de reportagem acontece, vários jornais, canais de TV e sites precisam ser atualizados. O padrão Observer organiza exatamente essa dinâmica: um "Assunto" (a notícia) notifica seus "Observadores" (as mídias) sobre a novidade.</p>
+                    </div>
+                </section>
+
+                <!-- Concept Section -->
+                <section id="conceito" class="content-section space-y-4 hidden">
+                    <h2 class="text-3xl font-bold text-stone-800">O Conceito: Um Alerta Automático</h2>
+                    <p class="text-lg text-stone-600">O padrão Observer define uma relação de dependência **um-para-muitos**. Quando o estado de um objeto (o **Assunto**) muda, todos os seus dependentes (os **Observadores**) são notificados e atualizados automaticamente.</p>
+                    <div class="grid md:grid-cols-2 gap-6 mt-6">
+                        <div class="p-6 bg-white border border-stone-200 rounded-xl">
+                            <h3 class="font-semibold text-xl text-amber-700 flex items-center">
+                                <span class="text-2xl mr-3">📢</span> Assunto (Subject)
+                            </h3>
+                            <p class="mt-2 text-stone-600">É o objeto de interesse. Ele mantém uma lista de seus observadores e fornece uma interface para que eles possam se registrar ou cancelar o registro. Quando seu estado muda, ele percorre a lista e notifica cada observador.</p>
+                        </div>
+                        <div class="p-6 bg-white border border-stone-200 rounded-xl">
+                            <h3 class="font-semibold text-xl text-amber-700 flex items-center">
+                                <span class="text-2xl mr-3">👂</span> Observador (Observer)
+                            </h3>
+                            <p class="mt-2 text-stone-600">É o objeto dependente. Ele define uma interface de atualização que o Assunto usará para notificá-lo. Cada observador se registra em um Assunto para receber as atualizações.</p>
+                        </div>
+                    </div>
+                     <p class="text-lg text-stone-600 mt-4">A grande vantagem é que o Assunto não precisa saber nada sobre os detalhes concretos de seus Observadores, apenas que eles implementam a interface de Observador. Isso é o que chamamos de **acoplamento fraco**.</p>
+                </section>
+
+                <!-- Diagram Section -->
+                <section id="diagrama" class="content-section space-y-4 hidden">
+                <h2 class="text-3xl font-bold text-stone-800">Diagrama de Classes (UML)</h2>
+
+                <!-- Explicação detalhada -->
+                <p class="text-lg text-stone-600">
+                    O diagrama abaixo ilustra o <strong>Padrão Observer</strong> aplicado a uma
+                    <strong>Estação Meteorológica</strong>. Nesse padrão, um objeto central
+                    (<em>Assunto</em>) mantém uma lista de interessados (<em>Observadores</em>)
+                    e os <strong>notifica automaticamente</strong> sempre que seu estado muda —
+                    aqui, quando a <strong>temperatura</strong> é atualizada.
+                </p>
+                <!-- Diagrama -->
+                <div class="p-6 bg-white border border-stone-200 rounded-xl mt-4 overflow-x-auto">
+                    <div class="flex flex-col md:flex-row justify-center items-start md:items-center gap-8 p-4 min-w-[700px]">
+                    <!-- Observers -->
+                    <div class="flex flex-col items-center gap-8">
+                        <div class="p-4 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg text-center w-60">
+                        <h4 class="font-bold text-blue-800">[I] Observador</h4>
+                        <hr class="my-2">
+                        <p class="text-sm text-blue-700">+ atualizar(temperatura: float)</p>
+                        </div>
+                        <div class="flex gap-4">
+                        <div class="p-3 bg-green-50 border border-green-300 rounded-lg text-center w-60">
+                            <h4 class="font-semibold text-green-800">[C] DisplayCondicoesAtuais</h4>
+                            <hr class="my-1">
+                            <p class="text-xs text-left text-green-700 ml-2">- temperatura: float</p>
+                            <p class="text-xs text-left text-green-700 ml-2">- estacaoMeteorologica: Assunto</p>
+                            <hr class="my-1">
+                            <p class="text-xs text-left text-green-700 ml-2">+ atualizar(temperatura: float)</p>
+                            <p class="text-xs text-left text-green-700 ml-2">+ exibir()</p>
+                        </div>
+                        <div class="p-3 bg-green-50 border border-green-300 rounded-lg text-center w-60">
+                            <h4 class="font-semibold text-green-800">[C] DisplayEstatisticas</h4>
+                            <hr class="my-1">
+                            <p class="text-xs text-left text-green-700 ml-2">- temperatura: float</p>
+                            <p class="text-xs text-left text-green-700 ml-2">- estacaoMeteorologica: Assunto</p>
+                            <hr class="my-1">
+                            <p class="text-xs text-left text-green-700 ml-2">+ atualizar(temperatura: float)</p>
+                            <p class="text-xs text-left text-green-700 ml-2">+ exibir()</p>
+                        </div>
+                        </div>
+                    </div>
+                    <!-- Subject -->
+                    <div class="flex flex-col items-center gap-8">
+                        <div class="p-4 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg text-center w-60">
+                        <h4 class="font-bold text-blue-800">[I] Assunto</h4>
+                        <hr class="my-2">
+                        <p class="text-sm text-blue-700">+ registrarObservador(o)</p>
+                        <p class="text-sm text-blue-700">+ removerObservador(o)</p>
+                        <p class="text-sm text-blue-700">+ notificarObservadores()</p>
+                        </div>
+                        <div class="p-3 bg-green-50 border border-green-300 rounded-lg text-center w-60">
+                        <h4 class="font-semibold text-green-800">[C] EstacaoMeteorologica</h4>
+                        <hr class="my-1">
+                        <p class="text-xs text-left text-green-700 ml-2">- observadores: List&lt;Observador&gt;</p>
+                        <p class="text-xs text-left text-green-700 ml-2">- temperatura: float</p>
+                        <hr class="my-1">
+                        <p class="text-xs text-left text-green-700 ml-2">+ registrarObservador(o)</p>
+                        <p class="text-xs text-left text-green-700 ml-2">+ removerObservador(o)</p>
+                        <p class="text-xs text-left text-green-700 ml-2">+ notificarObservadores()</p>
+                        <p class="text-xs text-left text-green-700 ml-2">+ setTemperatura(nova)</p>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="text-stone-700 space-y-3">
+                    <p class="font-semibold">Quem é quem no diagrama:</p>
+                    <ul class="list-disc pl-6 space-y-1">
+                    <li>
+                        <strong>[I] Assunto (Subject)</strong> — Interface que define como
+                        cadastrar, remover e notificar observadores
+                        (<code>registrarObservador</code>, <code>removerObservador</code>,
+                        <code>notificarObservadores</code>).
+                    </li>
+                    <li>
+                        <strong>[I] Observador (Observer)</strong> — Interface que todo
+                        “display” implementa. Expõe o método
+                        <code>atualizar(temperatura: float)</code>, chamado pelo Assunto.
+                    </li>
+                    <li>
+                        <strong>[C] EstacaoMeteorologica</strong> — Implementação concreta do
+                        Assunto. Guarda a lista <code>observadores: List&lt;Observador&gt;</code>
+                        e o estado <code>temperatura</code>. Ao mudar a leitura por
+                        <code>setTemperatura(nova)</code>, dispara
+                        <code>notificarObservadores()</code>.
+                    </li>
+                    <li>
+                        <strong>[C] DisplayCondicoesAtuais</strong> e
+                        <strong>[C] DisplayEstatisticas</strong> — Observadores concretos. Cada
+                        um mantém sua própria <code>temperatura</code> recebida em
+                        <code>atualizar(...)</code> e exibe os dados via <code>exibir()</code>.
+                    </li>
+                    </ul>
+
+                    <p class="font-semibold">Fluxo de atualização (o que acontece nos bastidores):</p>
+                    <ol class="list-decimal pl-6 space-y-1">
+                    <li>Os displays se registram na <em>EstacaoMeteorologica</em> como observadores.</li>
+                    <li>Quando a estação mede um novo valor, chama <code>setTemperatura(nova)</code>.</li>
+                    <li>A estação atualiza seu estado interno <code>temperatura</code>.</li>
+                    <li>Em seguida, executa <code>notificarObservadores()</code>, percorrendo a lista de inscritos.</li>
+                    <li>Para cada observador, a estação chama <code>atualizar(temperatura)</code>; cada display armazena o novo valor e chama <code>exibir()</code> para apresentar as informações.</li>
+                    </ol>
+
+                    <p>
+                    <strong>Por que isso é útil?</strong> Os displays ficam
+                    <em>desacoplados</em> da estação: é possível adicionar, remover ou alterar
+                    a forma de apresentação dos dados sem modificar a lógica da
+                    <em>EstacaoMeteorologica</em>. O Assunto apenas emite notificações; a
+                    reação fica a cargo de cada Observador, promovendo extensibilidade e
+                    baixo acoplamento.
+                    </p>
+                </div>
+
+                </section>
+
+
+                <!-- Code Section -->
+                <section id="codigo" class="content-section space-y-4 hidden">
+                    <h2 class="text-3xl font-bold text-stone-800">Explorando o Código-Fonte</h2>
+                    <p class="text-lg text-stone-600">A melhor forma de entender um padrão é vendo sua implementação. Aqui estão os principais arquivos Java do nosso exemplo da Estação Meteorológica. Navegue pelas abas para ver o papel de cada componente.</p>
+                    <div class="w-full bg-white border border-stone-200 rounded-xl mt-4">
+                        <div id="code-tabs" class="border-b border-stone-200 flex space-x-4 px-4">
+                            <button class="code-tab py-3 px-2 text-sm text-stone-500" data-target="assunto">Assunto.java</button>
+                            <button class="code-tab py-3 px-2 text-sm text-stone-500" data-target="observador">Observador.java</button>
+                            <button class="code-tab py-3 px-2 text-sm text-stone-500" data-target="estacao">EstacaoMeteorologica.java</button>
+                            <button class="code-tab py-3 px-2 text-sm text-stone-500" data-target="display">Displays.java</button>
+                        </div>
+                        <div id="code-content" class="p-4">
+                            <div id="assunto-code" class="code-pane">
+                                <div class="code-block">public interface Assunto {
+    void registrarObservador(Observador o);
+    void removerObservador(Observador o);
+    void notificarObservadores();
+}</div>
+                            </div>
+                            <div id="observador-code" class="code-pane hidden">
+                                <div class="code-block">public interface Observador {
+    void atualizar(float temperatura);
+}</div>
+                            </div>
+                            <div id="estacao-code" class="code-pane hidden">
+                                <div class="code-block">import java.util.ArrayList;
+import java.util.List;
+
+public class EstacaoMeteorologica implements Assunto {
+    private List&lt;Observador&gt; observadores;
+    private float temperatura;
+
+    public EstacaoMeteorologica() {
+        this.observadores = new ArrayList&lt;&gt;();
+    }
+
+    @Override
+    public void registrarObservador(Observador o) {
+        observadores.add(o);
+    }
+
+    @Override
+    public void removerObservador(Observador o) {
+        observadores.remove(o);
+    }
+
+    @Override
+    public void notificarObservadores() {
+        for (Observador observador : observadores) {
+            observador.atualizar(temperatura);
+        }
+    }
+
+    public void setTemperatura(float novaTemperatura) {
+        this.temperatura = novaTemperatura;
+        // Quando a temperatura muda, notificamos os observadores
+        notificarObservadores();
+    }
+}</div>
+                            </div>
+                            <div id="display-code" class="code-pane hidden">
+                                <div class="code-block">// DisplayCondicoesAtuais.java
+public class DisplayCondicoesAtuais implements Observador {
+    private float temperatura;
+    private Assunto estacaoMeteorologica;
+
+    public DisplayCondicoesAtuais(Assunto estacaoMeteorologica) {
+        this.estacaoMeteorologica = estacaoMeteorologica;
+        estacaoMeteorologica.registrarObservador(this);
+    }
+
+    @Override
+    public void atualizar(float temperatura) {
+        this.temperatura = temperatura;
+        exibir();
+    }
+    
+    public void exibir() {
+        System.out.println("Display Condições Atuais: " + temperatura + " °C");
+    }
+}
+
+// DisplayEstatisticas.java
+public class DisplayEstatisticas implements Observador {
+    private float temperatura;
+    private Assunto estacaoMeteorologica;
+
+    public DisplayEstatisticas(Assunto estacaoMeteorologica) {
+        this.estacaoMeteorologica = estacaoMeteorologica;
+        estacaoMeteorologica.registrarObservador(this);
+    }
+
+    @Override
+    public void atualizar(float temperatura) {
+        this.temperatura = temperatura;
+        exibir();
+    }
+    
+    public void exibir() {
+        System.out.println("Display Estatísticas: Uma nova medição de " + temperatura + " °C foi recebida.");
+    }
+}</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Simulation Section -->
+                <section id="simulacao" class="content-section space-y-4 hidden">
+                    <h2 class="text-3xl font-bold text-stone-800">Simulação Interativa</h2>
+                    <p class="text-lg text-stone-600">Vamos ver o padrão Observer em ação! Use o controle deslizante para alterar a temperatura da Estação Meteorológica. Observe como os displays (nossos Observadores) reagem instantaneamente. Você também pode desconectar e reconectar os displays para ver como o Assunto lida com isso.</p>
+                    
+                    <div class="grid lg:grid-cols-3 gap-6 mt-4">
+                        <!-- Control Panel -->
+                        <div class="lg:col-span-1 p-6 bg-white border border-stone-200 rounded-xl space-y-6">
+                            <h3 class="font-semibold text-xl text-amber-700">Painel de Controle</h3>
+                            <div>
+                                <label for="temp-slider" class="block text-sm font-medium text-stone-700">Temperatura da Estação</label>
+                                <input id="temp-slider" type="range" min="0" max="40" value="20" step="0.1" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer">
+                                <p class="text-center text-2xl font-bold text-stone-800 mt-2"><span id="temp-label">20.0</span> °C</p>
+                            </div>
+                        </div>
+
+                        <!-- Displays -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div id="display1" class="sim-display p-6 bg-white border border-stone-200 rounded-xl">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold text-lg text-stone-800">Display de Condições Atuais</h4>
+                                        <p class="text-4xl font-bold text-amber-600 mt-2 temp-value">20.0 °C</p>
+                                    </div>
+                                    <button class="toggle-observer-btn text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200" data-observer-id="1">Desconectar</button>
+                                </div>
+                            </div>
+                            <div id="display2" class="sim-display p-6 bg-white border border-stone-200 rounded-xl">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold text-lg text-stone-800">Display de Estatísticas</h4>
+                                        <p class="mt-2 text-stone-600">Nova medição recebida: <span class="text-2xl font-bold text-amber-600 temp-value">20.0 °C</span></p>
+                                    </div>
+                                    <button class="toggle-observer-btn text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200" data-observer-id="2">Desconectar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Log -->
+                    <div class="mt-6">
+                        <h3 class="font-semibold text-xl text-stone-800">Log de Eventos</h3>
+                        <div id="log-output" class="mt-2 p-4 h-48 bg-gray-800 text-white font-mono text-sm rounded-lg overflow-y-auto">
+                            <p>> Simulação iniciada. Aguardando eventos...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Advantages Section -->
+                <section id="vantagens" class="content-section space-y-4 hidden">
+                    <h2 class="text-3xl font-bold text-stone-800">Vantagens de Usar o Observer</h2>
+                    <p class="text-lg text-stone-600">A adoção deste padrão traz benefícios significativos para a arquitetura do software, promovendo um design mais limpo e manutenível.</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                        <div class="p-6 bg-white border border-stone-200 rounded-xl">
+                            <h3 class="font-semibold text-xl text-amber-700">🔗 Acoplamento Fraco</h3>
+                            <p class="mt-2 text-stone-600">O Assunto não conhece as classes concretas dos Observadores, apenas a interface. Isso significa que você pode adicionar novos observadores sem precisar alterar o código do Assunto.</p>
+                        </div>
+                        <div class="p-6 bg-white border border-stone-200 rounded-xl">
+                            <h3 class="font-semibold text-xl text-amber-700">🔄 Reusabilidade</h3>
+                            <p class="mt-2 text-stone-600">Como o Assunto e os Observadores são independentes, é possível reutilizá-los em diferentes contextos e com diferentes combinações.</p>
+                        </div>
+                        <div class="p-6 bg-white border border-stone-200 rounded-xl">
+                            <h3 class="font-semibold text-xl text-amber-700">➕ Extensibilidade</h3>
+                            <p class="mt-2 text-stone-600">Adicionar um novo tipo de display (Observador) ao nosso sistema de estação meteorológica é simples: basta criar uma nova classe que implemente a interface `Observador`.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Conclusion Section -->
+                <section id="conclusao" class="content-section space-y-4 hidden">
+                    <h2 class="text-3xl font-bold text-stone-800">Conclusão</h2>
+                    <p class="text-lg text-stone-600">O Padrão Observer é uma ferramenta poderosa para construir sistemas onde a comunicação entre objetos precisa ser flexível e dinâmica. Ele permite que objetos reajam a mudanças em outros objetos sem estarem fortemente acoplados.</p>
+                    <div class="p-6 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg mt-4">
+                        <p class="text-xl font-semibold text-stone-800">Lembre-se da ideia principal: <span class="text-amber-700">Assunto Notifica, Observador Reage.</span></p>
+                        <p class="mt-2 text-stone-700">Ao dominar este padrão, você estará mais preparado para criar aplicações robustas, manuteníveis e prontas para futuras extensões.</p>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Navigation Logic ---
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            function updateContent(hash) {
+                const targetHash = hash || '#introducao';
+                
+                navLinks.forEach(link => {
+                    link.classList.toggle('active-nav', link.getAttribute('href') === targetHash);
+                });
+
+                contentSections.forEach(section => {
+                    section.classList.toggle('hidden', section.id !== targetHash.substring(1));
+                });
+            }
+
+            document.getElementById('navigation').addEventListener('click', function(e) {
+                if (e.target.classList.contains('nav-link')) {
+                    e.preventDefault();
+                    const targetHash = e.target.getAttribute('href');
+                    window.location.hash = targetHash;
+                }
+            });
+            
+            window.addEventListener('hashchange', () => updateContent(window.location.hash));
+            updateContent(window.location.hash);
+
+
+            // --- Code Tabs Logic ---
+            const codeTabs = document.querySelectorAll('.code-tab');
+            const codePanes = document.querySelectorAll('.code-pane');
+
+            codeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    codeTabs.forEach(t => t.classList.remove('tab-active'));
+                    tab.classList.add('tab-active');
+
+                    const target = tab.getAttribute('data-target');
+                    codePanes.forEach(pane => {
+                        pane.classList.toggle('hidden', pane.id !== `${target}-code`);
+                    });
+                });
+            });
+            // Set initial active tab
+            if(codeTabs.length > 0) {
+                codeTabs[0].classList.add('tab-active');
+                codePanes[0].classList.remove('hidden');
+            }
+
+
+            // --- Interactive Simulation Logic ---
+            const logOutput = document.getElementById('log-output');
+            const tempSlider = document.getElementById('temp-slider');
+            const tempLabel = document.getElementById('temp-label');
+
+            function logMessage(message, type = 'info') {
+                const p = document.createElement('p');
+                let prefix = '> ';
+                if (type === 'update') prefix = '<span class="text-green-400">✓</span> ';
+                if (type === 'action') prefix = '<span class="text-yellow-400">!</span> ';
+                p.innerHTML = `${prefix}${message}`;
+                logOutput.appendChild(p);
+                logOutput.scrollTop = logOutput.scrollHeight;
+            }
+
+            // Subject (EstacaoMeteorologica)
+            class EstacaoMeteorologica {
+                constructor() {
+                    this.observers = [];
+                    this.temperatura = 20.0;
+                }
+
+                registrarObservador(observer) {
+                    this.observers.push(observer);
+                    logMessage(`Observador '${observer.name}' registrado.`);
+                }
+
+                removerObservador(observer) {
+                    this.observers = this.observers.filter(o => o !== observer);
+                    logMessage(`Observador '${observer.name}' removido.`);
+                }
+
+                notificarObservadores() {
+                    if(this.observers.length > 0) {
+                        logMessage(`Notificando ${this.observers.length} observador(es)...`, 'action');
+                        this.observers.forEach(observer => {
+                            observer.atualizar(this.temperatura);
+                        });
+                    } else {
+                        logMessage('Nenhum observador para notificar.', 'action');
+                    }
+                }
+
+                setTemperatura(novaTemperatura) {
+                    this.temperatura = novaTemperatura;
+                    logMessage(`Temperatura da estação alterada para ${this.temperatura.toFixed(1)}°C.`);
+                    this.notificarObservadores();
+                }
+            }
+
+            // Observer (Displays)
+            class Display {
+                constructor(id, name, element) {
+                    this.id = id;
+                    this.name = name;
+                    this.element = element;
+                    this.tempValueElements = this.element.querySelectorAll('.temp-value');
+                }
+
+                atualizar(temperatura) {
+                    this.tempValueElements.forEach(el => {
+                        el.textContent = `${temperatura.toFixed(1)} °C`;
+                    });
+                    this.element.classList.add('highlight-update');
+                    setTimeout(() => this.element.classList.remove('highlight-update'), 1000);
+                    logMessage(`Display '${this.name}' atualizado com a nova temperatura.`, 'update');
+                }
+            }
+
+            const estacao = new EstacaoMeteorologica();
+            
+            const display1El = document.getElementById('display1');
+            const display2El = document.getElementById('display2');
+
+            const displayCondicoes = new Display(1, 'Condições Atuais', display1El);
+            const displayEstatisticas = new Display(2, 'Estatísticas', display2El);
+
+            let observersState = {
+                1: { observer: displayCondicoes, connected: true },
+                2: { observer: displayEstatisticas, connected: true }
+            };
+
+            // Initial registration
+            estacao.registrarObservador(displayCondicoes);
+            estacao.registrarObservador(displayEstatisticas);
+
+            tempSlider.addEventListener('input', (e) => {
+                const newTemp = parseFloat(e.target.value);
+                tempLabel.textContent = newTemp.toFixed(1);
+            });
+            
+            tempSlider.addEventListener('change', (e) => {
+                 const newTemp = parseFloat(e.target.value);
+                 estacao.setTemperatura(newTemp);
+            });
+
+            document.querySelectorAll('.toggle-observer-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const observerId = e.target.getAttribute('data-observer-id');
+                    const state = observersState[observerId];
+
+                    state.connected = !state.connected;
+                    const displayElement = state.observer.element;
+                    
+                    if (state.connected) {
+                        estacao.registrarObservador(state.observer);
+                        e.target.textContent = 'Desconectar';
+                        e.target.classList.remove('bg-green-100', 'text-green-700', 'hover:bg-green-200');
+                        e.target.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+                        displayElement.classList.remove('disconnected');
+                        // Update immediately on reconnect
+                        state.observer.atualizar(estacao.temperatura);
+                    } else {
+                        estacao.removerObservador(state.observer);
+                        e.target.textContent = 'Reconectar';
+                        e.target.classList.remove('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+                        e.target.classList.add('bg-green-100', 'text-green-700', 'hover:bg-green-200');
+                        displayElement.classList.add('disconnected');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
