@@ -1,3 +1,8 @@
+# [🔗 Acesse a Aula Interativa](./index.html)  
+<img src="./out/qr-code-frame.png" alt="QR Code" width="250"/>
+
+##
+
 # Padrão Observer em Java
 
 Este projeto demonstra a implementação do padrão de design comportamental **Observer** em Java. O padrão define uma dependência de um para muitos entre objetos, garantindo que quando um objeto (o assunto) muda de estado, todos os seus dependentes (os observadores) são notificados e atualizados automaticamente.
