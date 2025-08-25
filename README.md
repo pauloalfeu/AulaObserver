@@ -1,4 +1,4 @@
-# [🔗 Acesse a Aula Interativa](./index.html)  
+# [🔗 Acesse a Aula Interativa](https://pauloalfeu.github.io/AulaObserver/)  
 <img src="./out/qr-code-frame.png" alt="QR Code" width="250"/>
 
 ##
